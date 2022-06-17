@@ -6,12 +6,10 @@
 # PRs will take use of testing builds.
 
 name: Build Paper
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-    build:
-        # Only run on PRs if the source branch is on someone else's repo
-        if: ${{ github.event_name != 'pull_request' || github.repository != github.event.pull_request.head.repo.full_name }}
+    build_paper:
         runs-on: ubuntu-latest
         strategy:
             matrix:
@@ -29,5 +27,11 @@ jobs:
               run: |
                   git config --global user.email "no-reply@github.com"
                   git config --global user.name "Github Actions"
-                  ./gradlew applyPatches --stacktrace
-                  ./gradlew build --stacktrace
+                  ./gradlew applyPatches
+                  ./gradlew applyServerPatches
+                  ./gradlew createReobfPaperclipJar
+            - name : Upload files
+              uses: actions/upload-artifact@v3
+              with:
+                  name: paper-server
+                  path: build/libs
